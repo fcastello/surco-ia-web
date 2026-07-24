@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+_Nada pendiente._
+
+## [0.2.0] - 2026-07-24
+
 ### Added
 
 - Historial de movimientos de inventario en `/inventario`
