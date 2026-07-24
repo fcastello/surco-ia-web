@@ -3,6 +3,14 @@ import { getExchangeRate, SurcoApiError } from "../api/client";
 
 type Currency = "ARS" | "USD";
 
+function todayLocalISODate(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 type Props = {
   title: string;
   submitLabel: string;
@@ -13,6 +21,7 @@ type Props = {
     currency: Currency;
     description: string;
     exchange_rate: number;
+    occurred_at: string;
   }) => Promise<void>;
   onSuccessNavigate: () => void;
 };
@@ -27,6 +36,7 @@ export function FinanceTransactionForm({
 }: Props) {
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState<Currency>("ARS");
+  const [occurredAt, setOccurredAt] = useState(todayLocalISODate);
   const [description, setDescription] = useState("");
   const [exchangeRate, setExchangeRate] = useState("");
   const [rateSource, setRateSource] = useState("");
@@ -77,6 +87,10 @@ export function FinanceTransactionForm({
       setError("Ingresá un tipo de cambio USD/ARS válido.");
       return;
     }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(occurredAt)) {
+      setError("Ingresá una fecha válida.");
+      return;
+    }
     setLoading(true);
     try {
       await onSubmit({
@@ -84,6 +98,7 @@ export function FinanceTransactionForm({
         currency,
         description,
         exchange_rate: rate,
+        occurred_at: occurredAt,
       });
       setSuccess(successMessage);
       setTimeout(onSuccessNavigate, 1200);
@@ -100,6 +115,15 @@ export function FinanceTransactionForm({
       <form className="card form-card" onSubmit={handleSubmit}>
         {error && <p className="error">{error}</p>}
         {success && <p className="success">{success}</p>}
+        <label>
+          Fecha
+          <input
+            type="date"
+            value={occurredAt}
+            onChange={(e) => setOccurredAt(e.target.value)}
+            required
+          />
+        </label>
         <label>
           Monto
           <input

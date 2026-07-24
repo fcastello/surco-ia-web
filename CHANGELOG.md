@@ -7,6 +7,8 @@
 - Formulario de gasto/ingreso: tipo de cambio del día (API) editable antes de guardar
 - Preview ARS ≈ USD congelado al registrar
 - `getExchangeRate` en el client API
+- Campo fecha (`occurred_at`) en gasto/ingreso, default hoy
+- Etiquetas de roles en español (Propietario / Miembro)
 
 ## [0.1.0] — 2026-06-12
 

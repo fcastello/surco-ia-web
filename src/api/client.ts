@@ -81,6 +81,8 @@ export type FinanceTransactionBody = {
   currency: string;
   description: string;
   exchange_rate: number;
+  /** Fecha de la operación (YYYY-MM-DD o RFC3339). Default: hoy en el servidor. */
+  occurred_at?: string;
 };
 
 export type ExchangeRateResponse = {

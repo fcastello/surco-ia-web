@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { addUser, listUsers, SurcoApiError } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import { roleLabel } from "../lib/roles";
 
 export function UsersPage() {
   const { session, activeTenant } = useAuth();
@@ -60,7 +61,7 @@ export function UsersPage() {
             {users.map((u) => (
               <tr key={u.email}>
                 <td>{u.email}</td>
-                <td>{u.role}</td>
+                <td>{roleLabel(u.role)}</td>
               </tr>
             ))}
           </tbody>
@@ -78,8 +79,8 @@ export function UsersPage() {
         <label>
           Rol
           <select value={role} onChange={(e) => setRole(e.target.value)}>
-            <option value="member">member</option>
-            <option value="tenant_owner">tenant_owner</option>
+            <option value="member">Miembro</option>
+            <option value="tenant_owner">Propietario</option>
           </select>
         </label>
         <button type="submit" className="btn btn-primary" disabled={loading}>

@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { roleLabel } from "../lib/roles";
 
 const nav = [
   { to: "/", label: "Inicio" },
@@ -30,7 +31,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           >
             {session.tenants.map((t) => (
               <option key={t.tenant_id} value={t.tenant_id}>
-                {t.tenant_id} ({t.role})
+                {t.tenant_id} ({roleLabel(t.role)})
               </option>
             ))}
           </select>
