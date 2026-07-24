@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
+  deleteFinanceTransaction,
   listFinanceTransactions,
   updateFinanceTransaction,
   type FinanceEntry,
@@ -8,6 +9,7 @@ import {
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { CategorySelect } from "../components/CategorySelect";
+import { can, canAll, canOwnOrAll } from "../lib/permissions";
 
 type Props = {
   entryType: "expense" | "income";
@@ -48,7 +50,17 @@ export function TransactionsListPage({
   createLabel,
   emptyMessage,
 }: Props) {
-  const { session } = useAuth();
+  const { session, activeTenant } = useAuth();
+  const perms = activeTenant?.permissions;
+  const resource = entryType === "expense" ? "expenses" : "income";
+  const canCreate = can(perms, `${resource}:create`);
+  const canRead = canOwnOrAll(perms, resource, "read");
+  const canUpdateAll = canAll(perms, resource, "update");
+  const canUpdateOwn = canOwnOrAll(perms, resource, "update");
+  const canDeleteAll = canAll(perms, resource, "delete");
+  const canDeleteOwn = canOwnOrAll(perms, resource, "delete");
+  const userId = session?.user_id ?? "";
+
   const [rows, setRows] = useState<FinanceEntry[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -135,13 +147,47 @@ export function TransactionsListPage({
     }
   }
 
+  function canEditRow(row: FinanceEntry): boolean {
+    if (canUpdateAll) return true;
+    return canUpdateOwn && row.created_by === userId;
+  }
+
+  function canDeleteRow(row: FinanceEntry): boolean {
+    if (canDeleteAll) return true;
+    return canDeleteOwn && row.created_by === userId;
+  }
+
+  async function onDelete(row: FinanceEntry) {
+    if (!session?.token || !session.activeTenantId) return;
+    if (!confirm(`¿Borrar «${row.description}»?`)) return;
+    try {
+      await deleteFinanceTransaction(session.token, session.activeTenantId, row.id);
+      setNotice("Registro eliminado.");
+      setEdit(null);
+      loadRows();
+    } catch (err) {
+      setError(err instanceof SurcoApiError ? err.message : "Error al borrar");
+    }
+  }
+
+  if (!canRead && !canCreate) {
+    return (
+      <div className="page">
+        <h1>{title}</h1>
+        <p className="error">No tenés permiso para ver esta sección.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="page">
       <div className="page-header">
         <h1>{title}</h1>
-        <Link to={createPath} className="btn btn-primary">
-          {createLabel}
-        </Link>
+        {canCreate && (
+          <Link to={createPath} className="btn btn-primary">
+            {createLabel}
+          </Link>
+        )}
       </div>
 
       {loading && <p className="muted">Cargando…</p>}
@@ -277,13 +323,24 @@ export function TransactionsListPage({
                   <td>{formatMoney(row.amount_ars, "ARS")}</td>
                   <td>{formatMoney(row.amount_usd, "USD")}</td>
                   <td className="row-actions">
-                    <button
-                      type="button"
-                      className="btn btn-small btn-secondary"
-                      onClick={() => startEdit(row)}
-                    >
-                      Editar
-                    </button>
+                    {canEditRow(row) && (
+                      <button
+                        type="button"
+                        className="btn btn-small btn-secondary"
+                        onClick={() => startEdit(row)}
+                      >
+                        Editar
+                      </button>
+                    )}
+                    {canDeleteRow(row) && (
+                      <button
+                        type="button"
+                        className="btn btn-small btn-danger"
+                        onClick={() => void onDelete(row)}
+                      >
+                        Borrar
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

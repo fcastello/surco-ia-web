@@ -6,6 +6,10 @@
 
 - Historial de movimientos de inventario en `/inventario`
 - Formulario de alta/edición/movimiento debajo del título (fixija «Nuevo ítem» fuera de vista)
+- Roles custom por tenant: página `/roles` con matriz de permisos granulares
+- Asignación de roles (sistema y custom) en Usuarios; quitar membresía
+- Gates de UI por permiso (nav, dashboard, editar/borrar gastos e ingresos)
+- Borrar gasto/ingreso desde la tabla
 
 ## [0.1.2] - 2026-07-24
 

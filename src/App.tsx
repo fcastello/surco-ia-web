@@ -11,6 +11,7 @@ import {
   IncomesListPage,
 } from "./pages/TransactionsListPage";
 import { UsersPage } from "./pages/UsersPage";
+import { RolesPage } from "./pages/RolesPage";
 
 export function App() {
   return (
@@ -26,6 +27,7 @@ export function App() {
             <Route path="/ingreso" element={<IncomePage />} />
             <Route path="/inventario" element={<InventoryPage />} />
             <Route path="/usuarios" element={<UsersPage />} />
+            <Route path="/roles" element={<RolesPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
