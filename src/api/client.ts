@@ -76,10 +76,29 @@ export async function login(email: string, password: string): Promise<AuthSessio
   });
 }
 
+export type FinanceTransactionBody = {
+  amount: number;
+  currency: string;
+  description: string;
+  exchange_rate: number;
+};
+
+export type ExchangeRateResponse = {
+  currency: string;
+  rate_ars: number;
+  source: string;
+};
+
+export async function getExchangeRate(currency = "USD"): Promise<ExchangeRateResponse> {
+  return apiFetch<ExchangeRateResponse>(
+    `/api/finance/exchange-rate?currency=${encodeURIComponent(currency)}`,
+  );
+}
+
 export async function postExpense(
   token: string,
   tenantId: string,
-  body: { amount: number; currency: string; description: string },
+  body: FinanceTransactionBody,
 ) {
   return apiFetch("/api/finance/transactions/expense", {
     method: "POST",
@@ -90,7 +109,7 @@ export async function postExpense(
 export async function postIncome(
   token: string,
   tenantId: string,
-  body: { amount: number; currency: string; description: string },
+  body: FinanceTransactionBody,
 ) {
   return apiFetch("/api/finance/transactions/income", {
     method: "POST",
