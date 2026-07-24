@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { getExchangeRate, SurcoApiError } from "../api/client";
+import { CategorySelect } from "./CategorySelect";
 
 type Currency = "ARS" | "USD";
 
@@ -16,12 +17,15 @@ type Props = {
   submitLabel: string;
   descriptionPlaceholder: string;
   successMessage: string;
+  /** Muestra el selector de categoría (gastos). */
+  withCategory?: boolean;
   onSubmit: (body: {
     amount: number;
     currency: Currency;
     description: string;
     exchange_rate: number;
     occurred_at: string;
+    category_id: number | null;
   }) => Promise<void>;
   onSuccessNavigate: () => void;
 };
@@ -31,11 +35,13 @@ export function FinanceTransactionForm({
   submitLabel,
   descriptionPlaceholder,
   successMessage,
+  withCategory = false,
   onSubmit,
   onSuccessNavigate,
 }: Props) {
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState<Currency>("ARS");
+  const [categoryId, setCategoryId] = useState<number | null>(null);
   const [occurredAt, setOccurredAt] = useState(todayLocalISODate);
   const [description, setDescription] = useState("");
   const [exchangeRate, setExchangeRate] = useState("");
@@ -99,6 +105,7 @@ export function FinanceTransactionForm({
         description,
         exchange_rate: rate,
         occurred_at: occurredAt,
+        category_id: categoryId,
       });
       setSuccess(successMessage);
       setTimeout(onSuccessNavigate, 1200);
@@ -190,6 +197,9 @@ export function FinanceTransactionForm({
             </strong>
             {` (TC ${parseFloat(exchangeRate).toLocaleString("es-AR")})`}
           </p>
+        )}
+        {withCategory && (
+          <CategorySelect value={categoryId} onChange={setCategoryId} />
         )}
         <label>
           Descripción

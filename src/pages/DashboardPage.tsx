@@ -32,9 +32,17 @@ export function DashboardPage() {
           <span className="action-title">Cargar ingreso</span>
           <span className="action-desc">Ventas, cobros</span>
         </Link>
+        <Link to="/gastos" className="action-card expense">
+          <span className="action-title">Ver gastos</span>
+          <span className="action-desc">Tabla con TC y equivalentes</span>
+        </Link>
+        <Link to="/ingresos" className="action-card income">
+          <span className="action-title">Ver ingresos</span>
+          <span className="action-desc">Tabla con TC y equivalentes</span>
+        </Link>
         <Link to="/inventario" className="action-card stock">
-          <span className="action-title">Ver inventario</span>
-          <span className="action-desc">Stock actual por insumo</span>
+          <span className="action-title">Inventario</span>
+          <span className="action-desc">ABM de ítems y movimientos</span>
         </Link>
       </div>
       {error && <p className="error">{error}</p>}

@@ -11,9 +11,10 @@ export function ExpensePage() {
     <FinanceTransactionForm
       title="Cargar gasto"
       submitLabel="Registrar gasto"
+      withCategory
       descriptionPlaceholder="Ej. combustible, fertilizante"
       successMessage="Gasto registrado correctamente."
-      onSuccessNavigate={() => navigate("/")}
+      onSuccessNavigate={() => navigate("/gastos")}
       onSubmit={async (body) => {
         if (!session?.token || !session.activeTenantId) {
           throw new Error("Sesión inválida");

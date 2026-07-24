@@ -13,7 +13,7 @@ export function IncomePage() {
       submitLabel="Registrar ingreso"
       descriptionPlaceholder="Ej. venta de granos"
       successMessage="Ingreso registrado correctamente."
-      onSuccessNavigate={() => navigate("/")}
+      onSuccessNavigate={() => navigate("/ingresos")}
       onSubmit={async (body) => {
         if (!session?.token || !session.activeTenantId) {
           throw new Error("Sesión inválida");

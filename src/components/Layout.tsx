@@ -4,8 +4,8 @@ import { roleLabel } from "../lib/roles";
 
 const nav = [
   { to: "/", label: "Inicio" },
-  { to: "/gasto", label: "Cargar gasto" },
-  { to: "/ingreso", label: "Cargar ingreso" },
+  { to: "/gastos", label: "Gastos" },
+  { to: "/ingresos", label: "Ingresos" },
   { to: "/inventario", label: "Inventario" },
   { to: "/usuarios", label: "Usuarios", ownerOnly: true },
 ];

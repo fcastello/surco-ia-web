@@ -4,6 +4,16 @@
 
 _Nada pendiente._
 
+## [0.1.2] - 2026-07-24
+
+### Added
+
+- ABM de inventario: alta, edición, baja (stock 0) y movimientos entrada/salida
+- Tablas de gastos (`/gastos`) e ingresos (`/ingresos`) con fecha, monto, TC, ARS/USD
+- Edición de gastos/ingresos desde la tabla (fecha, monto, moneda, TC, descripción)
+- Categorías de gastos: selector en alta/edición con creación inline; columna en la tabla
+- Nav actualizada: Gastos / Ingresos / Inventario
+
 ## [0.1.1] - 2026-07-24
 
 ### Added

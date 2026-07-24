@@ -6,6 +6,10 @@ import { ExpensePage } from "./pages/ExpensePage";
 import { IncomePage } from "./pages/IncomePage";
 import { InventoryPage } from "./pages/InventoryPage";
 import { LoginPage } from "./pages/LoginPage";
+import {
+  ExpensesListPage,
+  IncomesListPage,
+} from "./pages/TransactionsListPage";
 import { UsersPage } from "./pages/UsersPage";
 
 export function App() {
@@ -16,7 +20,9 @@ export function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<DashboardPage />} />
+            <Route path="/gastos" element={<ExpensesListPage />} />
             <Route path="/gasto" element={<ExpensePage />} />
+            <Route path="/ingresos" element={<IncomesListPage />} />
             <Route path="/ingreso" element={<IncomePage />} />
             <Route path="/inventario" element={<InventoryPage />} />
             <Route path="/usuarios" element={<UsersPage />} />

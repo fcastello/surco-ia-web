@@ -199,6 +199,70 @@ select {
   border: 1px solid rgba(255, 255, 255, 0.35);
 }
 
+.page h1 {
+  margin: 0 0 0.5rem;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.page-header h1 {
+  margin: 0;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.btn-small {
+  padding: 0.3rem 0.55rem;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.btn-small:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-danger {
+  color: var(--error, #b42318);
+  border-color: #f0c0ba;
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: inherit;
+  padding: 0.55rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+a.btn {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
 .form-card {
   max-width: 420px;
 }
@@ -325,4 +389,25 @@ code {
   background: #eef2ea;
   padding: 0.15rem 0.35rem;
   border-radius: 4px;
+}
+
+.category-select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.category-select > .linkish {
+  align-self: flex-start;
+  font-size: 0.85rem;
+}
+
+.category-create {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.category-create input {
+  flex: 1;
 }

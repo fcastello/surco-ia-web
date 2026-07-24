@@ -83,7 +83,35 @@ export type FinanceTransactionBody = {
   exchange_rate: number;
   /** Fecha de la operación (YYYY-MM-DD o RFC3339). Default: hoy en el servidor. */
   occurred_at?: string;
+  /** Categoría del gasto (null = sin categoría). */
+  category_id?: number | null;
 };
+
+export type FinanceCategory = {
+  id: number;
+  name: string;
+  created_at: string;
+};
+
+export async function listFinanceCategories(token: string, tenantId: string) {
+  return apiFetch<{ categories: FinanceCategory[] }>(
+    "/api/finance/categories",
+    {},
+    token,
+    tenantId,
+  );
+}
+
+export async function createFinanceCategory(
+  token: string,
+  tenantId: string,
+  name: string,
+) {
+  return apiFetch<{ category: FinanceCategory }>("/api/finance/categories", {
+    method: "POST",
+    body: JSON.stringify({ name }),
+  }, token, tenantId);
+}
 
 export type ExchangeRateResponse = {
   currency: string;
@@ -119,6 +147,18 @@ export async function postIncome(
   }, token, tenantId);
 }
 
+export async function updateFinanceTransaction(
+  token: string,
+  tenantId: string,
+  id: number,
+  body: FinanceTransactionBody,
+) {
+  return apiFetch(`/api/finance/transactions/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  }, token, tenantId);
+}
+
 export async function getStock(token: string, tenantId: string) {
   return apiFetch<{ items: StockRow[] }>("/api/inventory/stock", {}, token, tenantId);
 }
@@ -129,6 +169,90 @@ export type StockRow = {
   unit: string;
   quantity: number;
 };
+
+export type InventoryItem = {
+  id: number;
+  sku: string;
+  name: string;
+  unit: string;
+};
+
+export async function createInventoryItem(
+  token: string,
+  tenantId: string,
+  body: { sku: string; name: string; unit: string },
+) {
+  return apiFetch<InventoryItem>("/api/inventory/items", {
+    method: "POST",
+    body: JSON.stringify(body),
+  }, token, tenantId);
+}
+
+export async function updateInventoryItem(
+  token: string,
+  tenantId: string,
+  sku: string,
+  body: { name: string; unit: string },
+) {
+  return apiFetch<InventoryItem>(
+    `/api/inventory/items/${encodeURIComponent(sku)}`,
+    { method: "PATCH", body: JSON.stringify(body) },
+    token,
+    tenantId,
+  );
+}
+
+export async function deleteInventoryItem(token: string, tenantId: string, sku: string) {
+  return apiFetch<void>(
+    `/api/inventory/items/${encodeURIComponent(sku)}`,
+    { method: "DELETE" },
+    token,
+    tenantId,
+  );
+}
+
+export async function postInventoryMovement(
+  token: string,
+  tenantId: string,
+  body: {
+    sku: string;
+    direction: "in" | "out";
+    quantity: number;
+    metadata?: { owner_type?: "own" | "contractor" };
+  },
+) {
+  return apiFetch("/api/inventory/movements", {
+    method: "POST",
+    body: JSON.stringify(body),
+  }, token, tenantId);
+}
+
+export type FinanceEntry = {
+  id: number;
+  entry_type: "expense" | "income" | string;
+  description: string;
+  occurred_at: string;
+  currency: string;
+  amount: number;
+  exchange_rate: number;
+  amount_ars: number;
+  amount_usd: number;
+  status: string;
+  category_id: number | null;
+  category: string;
+  created_by: string;
+  created_at: string;
+  today_exchange_rate?: number;
+  amount_usd_at_today_rate?: number;
+};
+
+export async function listFinanceTransactions(token: string, tenantId: string) {
+  return apiFetch<{
+    tenant_id: string;
+    today_exchange_rate: number;
+    transactions: FinanceEntry[];
+  }>("/api/finance/transactions", {}, token, tenantId);
+}
 
 export async function listUsers(token: string, tenantId: string) {
   return apiFetch<{ users: { email: string; role: string }[] }>(
