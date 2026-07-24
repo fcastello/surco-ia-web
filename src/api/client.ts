@@ -1,6 +1,7 @@
 export type TenantInfo = {
   tenant_id: string;
   role: string;
+  permissions?: string[];
   cluster_id: string;
   database_name: string;
   pg_user: string;
@@ -227,6 +228,32 @@ export async function postInventoryMovement(
   }, token, tenantId);
 }
 
+export type InventoryMovement = {
+  id: number;
+  sku: string;
+  item_name: string;
+  unit: string;
+  direction: "in" | "out" | string;
+  quantity: number;
+  created_by: string;
+  created_at: string;
+  metadata?: { owner_type?: string };
+};
+
+export async function listInventoryMovements(
+  token: string,
+  tenantId: string,
+  sku?: string,
+) {
+  const q = sku ? `?sku=${encodeURIComponent(sku)}` : "";
+  return apiFetch<{ movements: InventoryMovement[] }>(
+    `/api/inventory/movements${q}`,
+    {},
+    token,
+    tenantId,
+  );
+}
+
 export type FinanceEntry = {
   id: number;
   entry_type: "expense" | "income" | string;
@@ -271,6 +298,85 @@ export async function addUser(
   return apiFetch("/api/tenant-admin/users", {
     method: "POST",
     body: JSON.stringify(body),
+  }, token, tenantId);
+}
+
+export async function patchUserRole(
+  token: string,
+  tenantId: string,
+  email: string,
+  role: string,
+) {
+  return apiFetch(`/api/tenant-admin/users/${encodeURIComponent(email)}/role`, {
+    method: "PATCH",
+    body: JSON.stringify({ role }),
+  }, token, tenantId);
+}
+
+export async function deleteUser(token: string, tenantId: string, email: string) {
+  return apiFetch<void>(
+    `/api/tenant-admin/users/${encodeURIComponent(email)}`,
+    { method: "DELETE" },
+    token,
+    tenantId,
+  );
+}
+
+export type TenantRole = {
+  id: number;
+  tenant_id: string;
+  slug: string;
+  display_name: string;
+  is_system: boolean;
+  permissions: string[];
+};
+
+export async function listRoles(token: string, tenantId: string) {
+  return apiFetch<{ roles: TenantRole[]; permissions: string[] }>(
+    "/api/tenant-admin/roles",
+    {},
+    token,
+    tenantId,
+  );
+}
+
+export async function createRole(
+  token: string,
+  tenantId: string,
+  body: { slug: string; display_name: string; permissions: string[] },
+) {
+  return apiFetch<{ role: TenantRole }>("/api/tenant-admin/roles", {
+    method: "POST",
+    body: JSON.stringify(body),
+  }, token, tenantId);
+}
+
+export async function updateRole(
+  token: string,
+  tenantId: string,
+  slug: string,
+  body: { display_name: string; permissions: string[] },
+) {
+  return apiFetch<{ role: TenantRole }>(
+    `/api/tenant-admin/roles/${encodeURIComponent(slug)}`,
+    { method: "PATCH", body: JSON.stringify(body) },
+    token,
+    tenantId,
+  );
+}
+
+export async function deleteRole(token: string, tenantId: string, slug: string) {
+  return apiFetch<{ deleted: string }>(
+    `/api/tenant-admin/roles/${encodeURIComponent(slug)}`,
+    { method: "DELETE" },
+    token,
+    tenantId,
+  );
+}
+
+export async function deleteFinanceTransaction(token: string, tenantId: string, id: number) {
+  return apiFetch(`/api/finance/transactions/${id}`, {
+    method: "DELETE",
   }, token, tenantId);
 }
 

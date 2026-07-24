@@ -1,10 +1,12 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
   createInventoryItem,
   deleteInventoryItem,
   getStock,
+  listInventoryMovements,
   postInventoryMovement,
   updateInventoryItem,
+  type InventoryMovement,
   type StockRow,
   SurcoApiError,
 } from "../api/client";
@@ -12,9 +14,18 @@ import { useAuth } from "../auth/AuthContext";
 
 type Mode = "idle" | "create" | "edit" | "move";
 
+function formatDateTime(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleString("es-AR");
+}
+
 export function InventoryPage() {
   const { session } = useAuth();
+  const formRef = useRef<HTMLFormElement>(null);
   const [items, setItems] = useState<StockRow[]>([]);
+  const [movements, setMovements] = useState<InventoryMovement[]>([]);
+  const [filterSku, setFilterSku] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -29,14 +40,27 @@ export function InventoryPage() {
   const [ownerType, setOwnerType] = useState<"own" | "contractor">("own");
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    if (mode === "idle") return;
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [mode]);
+
   const reload = useCallback(() => {
     if (!session?.token || !session.activeTenantId) return;
     setLoading(true);
-    getStock(session.token, session.activeTenantId)
-      .then((r) => setItems(r.items ?? []))
+    const token = session.token;
+    const tenant = session.activeTenantId;
+    Promise.all([
+      getStock(token, tenant),
+      listInventoryMovements(token, tenant, filterSku || undefined),
+    ])
+      .then(([stock, mov]) => {
+        setItems(stock.items ?? []);
+        setMovements(mov.movements ?? []);
+      })
       .catch((e) => setError(e instanceof SurcoApiError ? e.message : "Error"))
       .finally(() => setLoading(false));
-  }, [session?.token, session?.activeTenantId]);
+  }, [session?.token, session?.activeTenantId, filterSku]);
 
   useEffect(() => {
     reload();
@@ -104,7 +128,7 @@ export function InventoryPage() {
 
   async function onEdit(e: FormEvent) {
     e.preventDefault();
-    if (!session?.token || !session.activeTenantId || !selectedSku) return;
+    if (!session?.token || !session.activeTenantId) return;
     setSaving(true);
     setError("");
     try {
@@ -116,7 +140,7 @@ export function InventoryPage() {
       resetForms();
       reload();
     } catch (err) {
-      setError(err instanceof SurcoApiError ? err.message : "Error al guardar");
+      setError(err instanceof SurcoApiError ? err.message : "Error al editar");
     } finally {
       setSaving(false);
     }
@@ -124,13 +148,11 @@ export function InventoryPage() {
 
   async function onDelete(row: StockRow) {
     if (!session?.token || !session.activeTenantId) return;
-    if (!window.confirm(`¿Eliminar el ítem ${row.sku}? Solo si el stock es 0.`)) return;
+    if (!confirm(`¿Eliminar ${row.sku}?`)) return;
     setError("");
-    setMessage("");
     try {
       await deleteInventoryItem(session.token, session.activeTenantId, row.sku);
       setMessage(`Ítem ${row.sku} eliminado.`);
-      if (selectedSku === row.sku) resetForms();
       reload();
     } catch (err) {
       setError(err instanceof SurcoApiError ? err.message : "Error al eliminar");
@@ -139,7 +161,7 @@ export function InventoryPage() {
 
   async function onMove(e: FormEvent) {
     e.preventDefault();
-    if (!session?.token || !session.activeTenantId || !selectedSku) return;
+    if (!session?.token || !session.activeTenantId) return;
     setSaving(true);
     setError("");
     try {
@@ -174,7 +196,101 @@ export function InventoryPage() {
 
       {error && <p className="error">{error}</p>}
       {message && <p className="success">{message}</p>}
-      {loading && <p className="muted">Cargando stock…</p>}
+      {loading && <p className="muted">Cargando…</p>}
+
+      {mode === "create" && (
+        <form ref={formRef} className="card form-card" onSubmit={onCreate}>
+          <h2>Nuevo ítem</h2>
+          <label>
+            SKU
+            <input value={sku} onChange={(e) => setSku(e.target.value)} required autoFocus />
+          </label>
+          <label>
+            Nombre
+            <input value={name} onChange={(e) => setName(e.target.value)} required />
+          </label>
+          <label>
+            Unidad
+            <input value={unit} onChange={(e) => setUnit(e.target.value)} required />
+          </label>
+          <div className="form-actions">
+            <button type="submit" className="btn btn-primary" disabled={saving}>
+              {saving ? "Guardando…" : "Crear"}
+            </button>
+            <button type="button" className="btn btn-secondary" onClick={resetForms}>
+              Cancelar
+            </button>
+          </div>
+        </form>
+      )}
+
+      {mode === "edit" && (
+        <form ref={formRef} className="card form-card" onSubmit={onEdit}>
+          <h2>Editar {selectedSku}</h2>
+          <label>
+            Nombre
+            <input value={name} onChange={(e) => setName(e.target.value)} required autoFocus />
+          </label>
+          <label>
+            Unidad
+            <input value={unit} onChange={(e) => setUnit(e.target.value)} required />
+          </label>
+          <div className="form-actions">
+            <button type="submit" className="btn btn-primary" disabled={saving}>
+              {saving ? "Guardando…" : "Guardar"}
+            </button>
+            <button type="button" className="btn btn-secondary" onClick={resetForms}>
+              Cancelar
+            </button>
+          </div>
+        </form>
+      )}
+
+      {mode === "move" && (
+        <form ref={formRef} className="card form-card" onSubmit={onMove}>
+          <h2>Movimiento — {selectedSku}</h2>
+          <label>
+            Tipo
+            <select
+              value={direction}
+              onChange={(e) => setDirection(e.target.value as "in" | "out")}
+            >
+              <option value="in">Entrada</option>
+              <option value="out">Salida</option>
+            </select>
+          </label>
+          <label>
+            Cantidad
+            <input
+              type="number"
+              step="0.01"
+              min="0.01"
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              required
+              autoFocus
+            />
+          </label>
+          <label>
+            Origen / destino
+            <select
+              value={ownerType}
+              onChange={(e) => setOwnerType(e.target.value as "own" | "contractor")}
+            >
+              <option value="own">Propio</option>
+              <option value="contractor">Contratista</option>
+            </select>
+          </label>
+          <div className="form-actions">
+            <button type="submit" className="btn btn-primary" disabled={saving}>
+              {saving ? "Guardando…" : "Registrar"}
+            </button>
+            <button type="button" className="btn btn-secondary" onClick={resetForms}>
+              Cancelar
+            </button>
+          </div>
+        </form>
+      )}
 
       {!loading && items.length === 0 && mode === "idle" && (
         <p className="notice">Sin ítems. Creá el primero con «Nuevo ítem».</p>
@@ -182,6 +298,7 @@ export function InventoryPage() {
 
       {items.length > 0 && (
         <div className="card table-wrap">
+          <h2>Stock</h2>
           <table>
             <thead>
               <tr>
@@ -204,6 +321,14 @@ export function InventoryPage() {
                   <td className="row-actions">
                     <button type="button" className="btn btn-small" onClick={() => startMove(row)}>
                       Movimiento
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-small btn-secondary"
+                      onClick={() => setFilterSku(row.sku)}
+                      title="Ver movimientos de este ítem"
+                    >
+                      Historial
                     </button>
                     <button type="button" className="btn btn-small" onClick={() => startEdit(row)}>
                       Editar
@@ -229,98 +354,56 @@ export function InventoryPage() {
         </div>
       )}
 
-      {mode === "create" && (
-        <form className="card form-card" onSubmit={onCreate}>
-          <h2>Nuevo ítem</h2>
-          <label>
-            SKU
-            <input value={sku} onChange={(e) => setSku(e.target.value)} required />
-          </label>
-          <label>
-            Nombre
-            <input value={name} onChange={(e) => setName(e.target.value)} required />
-          </label>
-          <label>
-            Unidad
-            <input value={unit} onChange={(e) => setUnit(e.target.value)} required />
-          </label>
-          <div className="form-actions">
-            <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? "Guardando…" : "Crear"}
-            </button>
-            <button type="button" className="btn btn-secondary" onClick={resetForms}>
-              Cancelar
-            </button>
-          </div>
-        </form>
-      )}
-
-      {mode === "edit" && (
-        <form className="card form-card" onSubmit={onEdit}>
-          <h2>Editar {selectedSku}</h2>
-          <label>
-            Nombre
-            <input value={name} onChange={(e) => setName(e.target.value)} required />
-          </label>
-          <label>
-            Unidad
-            <input value={unit} onChange={(e) => setUnit(e.target.value)} required />
-          </label>
-          <div className="form-actions">
-            <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? "Guardando…" : "Guardar"}
-            </button>
-            <button type="button" className="btn btn-secondary" onClick={resetForms}>
-              Cancelar
-            </button>
-          </div>
-        </form>
-      )}
-
-      {mode === "move" && (
-        <form className="card form-card" onSubmit={onMove}>
-          <h2>Movimiento — {selectedSku}</h2>
-          <label>
-            Tipo
-            <select
-              value={direction}
-              onChange={(e) => setDirection(e.target.value as "in" | "out")}
-            >
-              <option value="in">Entrada</option>
-              <option value="out">Salida</option>
+      <div className="card table-wrap">
+        <div className="page-header">
+          <h2>Movimientos</h2>
+          <label className="inline-filter">
+            Filtrar SKU
+            <select value={filterSku} onChange={(e) => setFilterSku(e.target.value)}>
+              <option value="">Todos</option>
+              {items.map((row) => (
+                <option key={row.sku} value={row.sku}>
+                  {row.sku} — {row.name}
+                </option>
+              ))}
             </select>
           </label>
-          <label>
-            Cantidad
-            <input
-              type="number"
-              step="0.01"
-              min="0.01"
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
-              required
-            />
-          </label>
-          <label>
-            Origen / destino
-            <select
-              value={ownerType}
-              onChange={(e) => setOwnerType(e.target.value as "own" | "contractor")}
-            >
-              <option value="own">Propio</option>
-              <option value="contractor">Contratista</option>
-            </select>
-          </label>
-          <div className="form-actions">
-            <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? "Guardando…" : "Registrar"}
-            </button>
-            <button type="button" className="btn btn-secondary" onClick={resetForms}>
-              Cancelar
-            </button>
-          </div>
-        </form>
-      )}
+        </div>
+        {!loading && movements.length === 0 && (
+          <p className="muted">Sin movimientos registrados{filterSku ? ` para ${filterSku}` : ""}.</p>
+        )}
+        {movements.length > 0 && (
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>SKU</th>
+                <th>Ítem</th>
+                <th>Tipo</th>
+                <th>Cantidad</th>
+                <th>Usuario</th>
+              </tr>
+            </thead>
+            <tbody>
+              {movements.map((m) => (
+                <tr key={m.id}>
+                  <td>{formatDateTime(m.created_at)}</td>
+                  <td>
+                    <code>{m.sku}</code>
+                  </td>
+                  <td>{m.item_name}</td>
+                  <td>{m.direction === "in" ? "Entrada" : "Salida"}</td>
+                  <td>
+                    {m.direction === "in" ? "+" : "−"}
+                    {m.quantity.toLocaleString("es-AR")} {m.unit}
+                  </td>
+                  <td>{m.created_by || "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 }

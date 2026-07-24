@@ -2,7 +2,10 @@
 
 ## [Unreleased]
 
-_Nada pendiente._
+### Added
+
+- Historial de movimientos de inventario en `/inventario`
+- Formulario de alta/edición/movimiento debajo del título (fixija «Nuevo ítem» fuera de vista)
 
 ## [0.1.2] - 2026-07-24
 
