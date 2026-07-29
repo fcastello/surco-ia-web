@@ -318,10 +318,16 @@ export function TransactionsListPage({
                     <td>{row.category || <span className="muted">—</span>}</td>
                   )}
                   <td>{row.currency}</td>
-                  <td>{formatMoney(row.amount, row.currency)}</td>
+                  <td className={entryType === "expense" ? "amount-expense" : "amount-income"}>
+                    {formatMoney(row.amount, row.currency)}
+                  </td>
                   <td>{row.exchange_rate.toLocaleString("es-AR")}</td>
-                  <td>{formatMoney(row.amount_ars, "ARS")}</td>
-                  <td>{formatMoney(row.amount_usd, "USD")}</td>
+                  <td className={entryType === "expense" ? "amount-expense" : "amount-income"}>
+                    {formatMoney(row.amount_ars, "ARS")}
+                  </td>
+                  <td className={entryType === "expense" ? "amount-expense" : "amount-income"}>
+                    {formatMoney(row.amount_usd, "USD")}
+                  </td>
                   <td className="row-actions">
                     {canEditRow(row) && (
                       <button
@@ -357,7 +363,7 @@ export function ExpensesListPage() {
     <TransactionsListPage
       entryType="expense"
       title="Gastos"
-      createPath="/gasto"
+      createPath="/gastos/nuevo"
       createLabel="Cargar gasto"
       emptyMessage="No hay gastos registrados."
     />
@@ -369,7 +375,7 @@ export function IncomesListPage() {
     <TransactionsListPage
       entryType="income"
       title="Ingresos"
-      createPath="/ingreso"
+      createPath="/ingresos/nuevo"
       createLabel="Cargar ingreso"
       emptyMessage="No hay ingresos registrados."
     />

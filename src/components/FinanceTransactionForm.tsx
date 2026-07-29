@@ -211,7 +211,7 @@ export function FinanceTransactionForm({
             required
           />
         </label>
-        <button type="submit" className="btn btn-primary" disabled={loading || rateLoading}>
+        <button type="submit" className="btn btn-primary btn-block" disabled={loading || rateLoading}>
           {loading ? "Guardando…" : submitLabel}
         </button>
       </form>

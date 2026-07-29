@@ -16,8 +16,8 @@ SPA React + Vite (M5): UI del productor contra el gateway (`/api/*`).
 |------|-----|-------------|
 | `/login` | Auth | público |
 | `/` | Dashboard + resumen | permisos read |
-| `/gasto`, `/gastos` | Alta / tabla gastos (editar, borrar, categoría) | `expenses:*` |
-| `/ingreso`, `/ingresos` | Alta / tabla ingresos | `income:*` |
+| `/gasto` → `/gastos/nuevo`, `/gastos` | Alta / tabla gastos | `expenses:*` |
+| `/ingreso` → `/ingresos/nuevo`, `/ingresos` | Alta / tabla ingresos | `income:*` |
 | `/inventario` | ABM ítems + movimientos | `inventory:*` |
 | `/usuarios` | Membresías + asignar rol | `users:manage` |
 | `/roles` | Matriz de permisos / roles custom | `users:manage` |

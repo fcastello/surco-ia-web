@@ -1,17 +1,29 @@
 import { FormEvent, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { SurcoApiError } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import { BrandMark } from "../components/BrandMark";
 
-export function LoginPage() {
+type Props = {
+  next?: string;
+};
+
+export function LoginPage({ next }: Props) {
   const { session, login } = useAuth();
+  const location = useLocation();
   const [email, setEmail] = useState("owner@cabrera.local");
   const [password, setPassword] = useState("SurcoDev2026!");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const dest =
+    next ||
+    (location.state as { from?: string } | null)?.from ||
+    "/";
+  const safeDest = dest.startsWith("/") && !dest.startsWith("//") ? dest : "/";
+
   if (session) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={safeDest === "/login" ? "/" : safeDest} replace />;
   }
 
   async function onSubmit(e: FormEvent) {
@@ -30,7 +42,10 @@ export function LoginPage() {
   return (
     <div className="login-page">
       <form className="card login-card" onSubmit={onSubmit}>
-        <h1>SurcoIA</h1>
+        <div className="login-brand">
+          <BrandMark />
+          <h1>SurcoIA</h1>
+        </div>
         <p className="subtitle">Gestión del campo — login local</p>
         {error && <p className="error">{error}</p>}
         <label>
@@ -47,7 +62,7 @@ export function LoginPage() {
             minLength={8}
           />
         </label>
-        <button type="submit" className="btn btn-primary" disabled={loading}>
+        <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
           {loading ? "Entrando…" : "Entrar"}
         </button>
       </form>

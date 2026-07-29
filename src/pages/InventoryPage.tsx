@@ -11,6 +11,7 @@ import {
   SurcoApiError,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import { can, canOwnOrAll } from "../lib/permissions";
 
 type Mode = "idle" | "create" | "edit" | "move";
 
@@ -21,7 +22,12 @@ function formatDateTime(iso: string): string {
 }
 
 export function InventoryPage() {
-  const { session } = useAuth();
+  const { session, activeTenant } = useAuth();
+  const perms = activeTenant?.permissions;
+  const canCreate = can(perms, "inventory:create");
+  const canRead = canOwnOrAll(perms, "inventory", "read");
+  const canUpdate = canOwnOrAll(perms, "inventory", "update");
+  const canDeleteOwn = canOwnOrAll(perms, "inventory", "delete");
   const formRef = useRef<HTMLFormElement>(null);
   const [items, setItems] = useState<StockRow[]>([]);
   const [movements, setMovements] = useState<InventoryMovement[]>([]);
@@ -189,16 +195,21 @@ export function InventoryPage() {
     <div className="page">
       <div className="page-header">
         <h1>Inventario</h1>
-        <button type="button" className="btn btn-primary" onClick={startCreate}>
-          Nuevo ítem
-        </button>
+        {canCreate && (
+          <button type="button" className="btn btn-primary" onClick={startCreate}>
+            Nuevo ítem
+          </button>
+        )}
       </div>
 
+      {!canRead && !canCreate && (
+        <p className="notice">No tenés permiso para ver el inventario.</p>
+      )}
       {error && <p className="error">{error}</p>}
       {message && <p className="success">{message}</p>}
-      {loading && <p className="muted">Cargando…</p>}
+      {loading && canRead && <p className="muted">Cargando…</p>}
 
-      {mode === "create" && (
+      {mode === "create" && canCreate && (
         <form ref={formRef} className="card form-card" onSubmit={onCreate}>
           <h2>Nuevo ítem</h2>
           <label>
@@ -319,9 +330,11 @@ export function InventoryPage() {
                     {row.quantity.toLocaleString("es-AR")} {row.unit}
                   </td>
                   <td className="row-actions">
-                    <button type="button" className="btn btn-small" onClick={() => startMove(row)}>
-                      Movimiento
-                    </button>
+                    {canUpdate && (
+                      <button type="button" className="btn btn-small" onClick={() => startMove(row)}>
+                        Movimiento
+                      </button>
+                    )}
                     <button
                       type="button"
                       className="btn btn-small btn-secondary"
@@ -330,22 +343,26 @@ export function InventoryPage() {
                     >
                       Historial
                     </button>
-                    <button type="button" className="btn btn-small" onClick={() => startEdit(row)}>
-                      Editar
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-small btn-danger"
-                      onClick={() => void onDelete(row)}
-                      disabled={row.quantity !== 0}
-                      title={
-                        row.quantity !== 0
-                          ? "Solo se puede eliminar con stock 0"
-                          : "Eliminar ítem"
-                      }
-                    >
-                      Baja
-                    </button>
+                    {canUpdate && (
+                      <button type="button" className="btn btn-small" onClick={() => startEdit(row)}>
+                        Editar
+                      </button>
+                    )}
+                    {canDeleteOwn && (
+                      <button
+                        type="button"
+                        className="btn btn-small btn-danger"
+                        onClick={() => void onDelete(row)}
+                        disabled={row.quantity !== 0}
+                        title={
+                          row.quantity !== 0
+                            ? "Solo se puede eliminar con stock 0"
+                            : "Eliminar ítem"
+                        }
+                      >
+                        Baja
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

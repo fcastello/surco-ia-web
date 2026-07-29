@@ -2,7 +2,11 @@
 
 ## [Unreleased]
 
-_Nada pendiente._
+### Changed
+
+- Tokens CSS completos (acentos ingreso/gasto/éxito, superficies, focus)
+- Navegación: rutas `/gastos/nuevo` y `/ingresos/nuevo`, active por sección, admin agrupado, menú mobile
+- Brand SVG, breadcrumbs en altas, 404, login con URL de retorno, gates de permiso en rutas
 
 ## [0.2.0] - 2026-07-24
 

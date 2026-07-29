@@ -30,13 +30,13 @@ export function DashboardPage() {
       <p className="lead">Operaciones rápidas para el día en el campo.</p>
       <div className="action-grid">
         {can(perms, "expenses:create") && (
-          <Link to="/gasto" className="action-card expense">
+          <Link to="/gastos/nuevo" className="action-card expense">
             <span className="action-title">Cargar gasto</span>
             <span className="action-desc">Combustible, insumos, servicios</span>
           </Link>
         )}
         {can(perms, "income:create") && (
-          <Link to="/ingreso" className="action-card income">
+          <Link to="/ingresos/nuevo" className="action-card income">
             <span className="action-title">Cargar ingreso</span>
             <span className="action-desc">Ventas, cobros</span>
           </Link>
@@ -67,11 +67,27 @@ export function DashboardPage() {
           <dl className="summary-dl">
             <div>
               <dt>Neto ARS (al cierre)</dt>
-              <dd>{summary.net_ars_at_close.toLocaleString("es-AR")} ARS</dd>
+              <dd
+                className={
+                  summary.net_ars_at_close >= 0
+                    ? "amount-net-positive"
+                    : "amount-net-negative"
+                }
+              >
+                {summary.net_ars_at_close.toLocaleString("es-AR")} ARS
+              </dd>
             </div>
             <div>
               <dt>Neto USD (congelado)</dt>
-              <dd>{summary.net_usd_at_close.toLocaleString("es-AR")} USD</dd>
+              <dd
+                className={
+                  summary.net_usd_at_close >= 0
+                    ? "amount-net-positive"
+                    : "amount-net-negative"
+                }
+              >
+                {summary.net_usd_at_close.toLocaleString("es-AR")} USD
+              </dd>
             </div>
             <div>
               <dt>Tipo del día</dt>
